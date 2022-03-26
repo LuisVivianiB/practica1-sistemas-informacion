@@ -21,3 +21,4 @@ alt.Chart(states).mark_geoshape().encode(
     color='independent'
 ).show()
 
+
