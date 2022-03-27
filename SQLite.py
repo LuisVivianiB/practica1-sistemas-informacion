@@ -21,6 +21,9 @@ def rellenartablas(con):
             con.commit()
 
 
+    ##user_data['usuarios'][i]['nombre']
+
+
 
 
 def sql_update(con):
@@ -55,7 +58,7 @@ def sql_delete_table(con):
 
 def sql_create_tables(con):
     cursorObj = con.cursor()
-    cursorObj.execute("CREATE TABLE IF NOT EXISTS usuarios (nombre text primary key, telefono integer, contrasena text, provincia text, permisos boolean, email text, fechas text, ips text)")
+    cursorObj.execute("CREATE TABLE IF NOT EXISTS usuarios (nombre text primary key, telefono integer, contrasena text, provincia text, permisos boolean, emails, fechas text, ips text, FOREIGN KEY ('emails') references emails(usuario))")
     cursorObj.execute("CREATE TABLE IF NOT EXISTS emails (usuario text primary key, total integer, phising integer, cliclados integer, FOREIGN KEY ('usuario') REFERENCES usuarios (nombre) )")
 
     cursorObj.execute("CREATE TABLE IF NOT EXISTS legal (url text primary key, cookies integer, aviso integer, proteccion_de_datos integer, creacion integer)")
@@ -64,6 +67,9 @@ def sql_create_tables(con):
     cursorObj.execute("CREATE TABLE IF NOT EXISTS ips(idips integer primary key autoincrement, ip text)")
     cursorObj.execute("CREATE TABLE IF NOT EXISTS IpsDeUsuarios ( idips integer primary key autoincrement, ipdeusua text, usuario text, FOREIGN KEY ('usuario') references usuarios(nombre), FOREIGN KEY ('ipdeusua') REFERENCES usuarios (nombre))")
     #cursorObj.execute("INSERT INTO legal VALUES ('X', '4', '1', '3', '5')")
+    cursorObj.execute("INSERT INTO emails VALUES ('Luis', '1' ,'2','3')")
+    cursorObj.execute("INSERT INTO usuarios VALUES('Luis', '23243', 'luis123', 'Madrid', '0', 'Luis', 'fecha', 'ips')")
+
     #sql_delete_table(con)
 
     con.commit()
