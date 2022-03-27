@@ -1,6 +1,7 @@
 import sqlite3
 
 import json
+import pandas as pd
 
 
 
@@ -86,11 +87,36 @@ def sql_create_tables(con):
 
     con.commit()
 
+def ejer2(con):
+    #contar numero de muestras de usuarios
+    print("El numero de muestras de usuarios es: ")
+    muestrasUsuarios = pd.DataFrame(pd.read_sql("SELECT nombre FROM usuarios", con))
+    num=muestrasUsuarios.count().sum()
+    print(num)
 
+    #contar numero de muestras de urls
+    print("\n")
+    print("El numero de muestras de urls es: ")
+    muestrasUrls = pd.DataFrame(pd.read_sql("SELECT url FROM legal", con))
+    num = muestrasUrls.count().sum()
+    print(num)
+    print("\n")
+
+    #media de inicios de sesion por fecha
+    fechasParaMedia= pd.DataFrame(pd.read_sql("SELECT * FROM FechasDeUsuarios",con),columns=["usuario","fechasdeusua"])
+    #print(fechasParaMedia)
+
+    print("Media de inicios de sesion por fecha: ")
+    num = fechasParaMedia.groupby('usuario').count().mean(numeric_only=True)[0]
+    print("%.4f\n" %num)
+
+    #Desviación estandar de inicios de sesión por fecha
+    
 
 con = sqlite3.connect('database.db')
 sql_create_tables(con)
-rellenarTablas(con)
+#rellenarTablas(con)
+ejer2(con)
 #sql_fetch(con)
 #sql_update(con)
 #sql_fetch(con)
