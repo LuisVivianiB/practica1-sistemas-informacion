@@ -103,15 +103,67 @@ def ejer2(con):
     print("\n")
 
     #media de inicios de sesion por fecha
-    fechasParaMedia= pd.DataFrame(pd.read_sql("SELECT * FROM FechasDeUsuarios",con),columns=["usuario","fechasdeusua"])
-    #print(fechasParaMedia)
+    fechas= pd.DataFrame(pd.read_sql("SELECT * FROM FechasDeUsuarios",con),columns=["usuario","fechasdeusua"])
+
 
     print("Media de inicios de sesion por fecha: ")
-    num = fechasParaMedia.groupby('usuario').count().mean(numeric_only=True)[0]
+    num = fechas.groupby('usuario').count().mean(numeric_only=True)[0]
     print("%.4f\n" %num)
 
     #Desviación estandar de inicios de sesión por fecha
+
+    print("Desviación de inicios de sesion por fecha: ")
+    num = fechas.groupby('usuario').count().std(numeric_only=True)[0]
+    print("%.4f\n" %num)
+
+    #media de IPS detectadas
+    ips= pd.DataFrame(pd.read_sql("SELECT * FROM IpsDeUsuarios",con),columns=["usuario","ipdeusua"])
+
+    print("Media de ips detectadas: ")
+    num = ips.groupby('usuario').count().mean(numeric_only=True)[0]
+    print("%.4f\n" %num)
+
+    #Desviación estandar de IPS detectadas
+
+    print("Desviación de ips detectadas: ")
+    num = ips.groupby('usuario').count().std(numeric_only=True)[0]
+    print("%.4f\n" %num)
+
+    #media de numero de emails recibidos
+    emails= pd.DataFrame(pd.read_sql("SELECT total FROM emails",con))
+
+    print("Media de emails recibidos: ")
+    num = emails.mean(numeric_only=True)[0]
+    print("%.4f\n" %num)
+
+    #Desviación estandar de emails recibidos
+
+    print("Desviación de emails recibidos: ")
+    num = emails.std(numeric_only=True)[0]
+    print("%.4f\n" %num)
+
+    #valor maximo del total de fechas que se ha iniciado sesion
+    print("Valor maximo del total de fechas que se ha iniciado sesión: ")
+    num = fechas.groupby('usuario').count().max().sum()
+    print(num)
+    print("\n")
+
+    # valor minimo del total de fechas que se ha iniciado sesion
+    print("Valor minimo del total de fechas que se ha iniciado sesión: ")
+    num = fechas.groupby('usuario').count().min().sum()
+    print(num)
+    print("\n")
     
+    # valor maximo de emails recibidos
+    print("Valor maximo de emails recibidos: ")
+    num = emails.max().sum()
+    print(num)
+    print("\n")
+
+    # valor minimo de emails recibidos
+    print("Valor minimo de emails recibidos: ")
+    num = emails.min().sum()
+    print(num)
 
 con = sqlite3.connect('database.db')
 sql_create_tables(con)
