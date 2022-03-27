@@ -14,6 +14,12 @@ def rellenartablas(con):
     with open("legal.json", "r") as f1:
         legal_data = json.load(f1)
 
+    cursorObj = con.cursor()
+    for i in range(len(legal_data['legal'])):
+        for url in legal_data['legal'][i].keys():
+            cursorObj.execute("INSERT INTO legal VALUES (?, ?, ?, ?, ?)", (url, legal_data['legal'][i][url]['cookies'], legal_data['legal'][i][url]['aviso'],legal_data['legal'][i][url]['proteccion_de_datos'], legal_data['legal'][i][url]['creacion']))
+            con.commit()
+
 
 
 
@@ -52,12 +58,12 @@ def sql_create_tables(con):
     cursorObj.execute("CREATE TABLE IF NOT EXISTS usuarios (nombre text primary key, telefono integer, contrasena text, provincia text, permisos boolean, email text, fechas text, ips text)")
     cursorObj.execute("CREATE TABLE IF NOT EXISTS emails (usuario text primary key, total integer, phising integer, cliclados integer, FOREIGN KEY ('usuario') REFERENCES usuarios (nombre) )")
 
-    cursorObj.execute("CREATE TABLE IF NOT EXISTS legal (url text primary key, cookies real, aviso real, proteccion_de_datos real, creacion real)")
+    cursorObj.execute("CREATE TABLE IF NOT EXISTS legal (url text primary key, cookies integer, aviso integer, proteccion_de_datos integer, creacion integer)")
     cursorObj.execute("CREATE TABLE IF NOT EXISTS fechas (idfechas integer primary key autoincrement, fecha text)")
     cursorObj.execute("CREATE TABLE IF NOT EXISTS FechasDeUsuarios (idfechas integer primary key autoincrement, fechasdeusua text, usuario text, FOREIGN KEY ('usuario') references usuarios(nombre), FOREIGN KEY ('fechasdeusua') references fechas(fecha))")
     cursorObj.execute("CREATE TABLE IF NOT EXISTS ips(idips integer primary key autoincrement, ip text)")
     cursorObj.execute("CREATE TABLE IF NOT EXISTS IpsDeUsuarios ( idips integer primary key autoincrement, ipdeusua text, usuario text, FOREIGN KEY ('usuario') references usuarios(nombre), FOREIGN KEY ('ipdeusua') REFERENCES usuarios (nombre))")
-    cursorObj.execute("INSERT INTO legal VALUES ('X', '4', '1', '3', '5')")
+    #cursorObj.execute("INSERT INTO legal VALUES ('X', '4', '1', '3', '5')")
     #sql_delete_table(con)
 
     con.commit()
@@ -66,6 +72,7 @@ def sql_create_tables(con):
 
 con = sqlite3.connect('database.db')
 sql_create_tables(con)
+rellenartablas(con)
 #sql_fetch(con)
 #sql_update(con)
 #sql_fetch(con)
