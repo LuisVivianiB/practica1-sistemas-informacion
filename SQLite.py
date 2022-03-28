@@ -1,7 +1,7 @@
 import sqlite3
-
-import json
 import pandas as pd
+import json
+
 
 
 
@@ -165,10 +165,16 @@ def ejer2(con):
     num = emails.min().sum()
     print(num)
 
+def ejer3(con):
+    permisosUsuario = pd.DataFrame(pd.read_sql("SELECT u.permisos, e.phishing FROM usuarios u join emails e on u.nombre=e.usuario where u.permisos=0", con), columns=["usuario", "phishing"])
+    print(permisosUsuario)
+
+
 con = sqlite3.connect('database.db')
 sql_create_tables(con)
 #rellenarTablas(con)
-ejer2(con)
+#ejer2(con)
+ejer3(con)
 #sql_fetch(con)
 #sql_update(con)
 #sql_fetch(con)
