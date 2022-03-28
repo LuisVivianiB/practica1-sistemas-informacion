@@ -1,10 +1,8 @@
 import sqlite3
 import pandas as pd
 import json
-
-
-
-
+import numpy as np
+from numpy import nan
 
 def rellenarTablas(con):
     #abrir json
@@ -40,25 +38,6 @@ def rellenarTablas(con):
 
 
 
-
-def sql_update(con):
-    cursorObj = con.cursor()
-    cursorObj.execute('UPDATE usuarios SET nombre = "Sergio" where dni = "X"')
-    con.commit()
-
-def sql_fetch(con):
-   cursorObj = con.cursor()
-   cursorObj.execute('SELECT * FROM usuarios')
-   #SELECT dni, nombre FROM usuarios WHERE altura > 1.0
-   rows = cursorObj.fetchall()
-   for row in rows:
-      print(row)
-
-def sql_delete(con):
-    cursorObj = con.cursor()
-    cursorObj.execute('DELETE FROM usuarios where dni = "X"')
-    con.commit()
-
 def sql_delete_table(con):
     cursorObj = con.cursor()
     cursorObj.execute('drop table if exists usuarios')
@@ -74,7 +53,7 @@ def sql_delete_table(con):
 def sql_create_tables(con):
     cursorObj = con.cursor()
     cursorObj.execute("CREATE TABLE IF NOT EXISTS usuarios (nombre text primary key, telefono integer, contrasena text, provincia text, permisos boolean, emails, fechas integer, ips integer, FOREIGN KEY ('emails') references emails(usuario))")
-    cursorObj.execute("CREATE TABLE IF NOT EXISTS emails (usuario text primary key, total integer, phising integer, cliclados integer, FOREIGN KEY ('usuario') REFERENCES usuarios (nombre) )")
+    cursorObj.execute("CREATE TABLE IF NOT EXISTS emails (usuario text primary key, total integer, phishing integer, cliclados integer, FOREIGN KEY ('usuario') REFERENCES usuarios (nombre) )")
 
     cursorObj.execute("CREATE TABLE IF NOT EXISTS legal (url text primary key, cookies integer, aviso integer, proteccion_de_datos integer, creacion integer)")
     cursorObj.execute("CREATE TABLE IF NOT EXISTS fechas (idfechas integer primary key autoincrement, fecha text)")
@@ -83,7 +62,6 @@ def sql_create_tables(con):
     cursorObj.execute("CREATE TABLE IF NOT EXISTS IpsDeUsuarios ( idips integer primary key autoincrement, ipdeusua text, usuario integer, FOREIGN KEY ('usuario') references usuarios(ips), FOREIGN KEY ('ipdeusua') REFERENCES ips (ip))")
 
 
-    #sql_delete_table(con)
 
     con.commit()
 
@@ -164,10 +142,179 @@ def ejer2(con):
     print("Valor minimo de emails recibidos: ")
     num = emails.min().sum()
     print(num)
+    print("\n")
 
 def ejer3(con):
-    permisosUsuario = pd.DataFrame(pd.read_sql("SELECT u.permisos, e.phishing FROM usuarios u join emails e on u.nombre=e.usuario where u.permisos=0", con), columns=["usuario", "phishing"])
-    print(permisosUsuario)
+
+    permisosUsuario = pd.DataFrame(pd.read_sql("SELECT e.phishing FROM usuarios u join emails e on u.nombre=e.usuario where u.permisos=0", con))
+    #print(permisosUsuario)
+
+    permisosAdmin= pd.DataFrame(pd.read_sql("SELECT e.phishing FROM usuarios u join emails e on u.nombre=e.usuario where u.permisos=1", con))
+    #print(permisosAdmin)
+
+    CorreosMas200= pd.DataFrame(pd.read_sql("SELECT e.phishing FROM usuarios u join emails e on u.nombre=e.usuario where e.total>=200",con))
+    #print(CorreosMas200)
+
+    CorreosMenos200 = pd.DataFrame(pd.read_sql("SELECT e.phishing FROM usuarios u join emails e on u.nombre=e.usuario where e.total < 200", con))
+    #print(CorreosMenos200)
+
+    ###reemplazar los NONE por NaN en todos los DataFrames
+    permisosUsuario.replace(to_replace=["None"], value=nan, inplace=True)
+    permisosAdmin.replace(to_replace=["None"], value=nan, inplace=True)
+    CorreosMas200.replace(to_replace=["None"], value=nan, inplace=True)
+    CorreosMenos200.replace(to_replace=["None"], value=nan, inplace=True)
+
+    #Numero de observaciones para cada agrupación
+
+    #Usuarios con permiso de usuario 0
+    print("El número de observaciones de mail de phising de personas con permisos de usuarios (permiso 0): ")
+    num = permisosUsuario.shape[0]
+    print(num)
+    print("\n")
+
+    # Usuarios con permiso de administrador 1
+    print("El número de observaciones de mail de phishing de personas con permisos de administrados (permiso 1): ")
+    num = permisosAdmin.shape[0]
+    print(num)
+    print("\n")
+
+    # Usuarios con total de emails >= 200
+    print("El numero de observaciones de mail de phising de usuarios con numero total de emails >= 200 es: ")
+    num = CorreosMas200.shape[0]
+    print(num)
+    print("\n")
+
+    # Usuarios con total de emails < 200
+    print("El numero de observaciones de mail de phising de usuarios con numero total de emails < 200 es: ")
+    num = CorreosMenos200.shape[0]
+    print(num)
+    print("\n")
+
+
+    #Valores missing (entendemos que son los valores missing dentro de la variable phishing que ya se encuentra filtrada en cada dataframe)
+    print("El numero de valores missing de mail de phising de usuarios con permisos de usuario (permiso 0): ")
+    num = permisosUsuario.isna().sum()[0]
+    print (num)
+    print("\n")
+
+    print("El numero de valores missing de mail de phising de usuarios con permisos de administrador (permiso 1): ")
+    num = permisosAdmin.isna().sum()[0]
+    print(num)
+    print("\n")
+
+    print("El numero de valores missing de mail de phising de usuarios con numero total de emails >= 200 es:  ")
+    num = CorreosMas200.isna().sum()[0]
+    print(num)
+    print("\n")
+
+    print("El numero de valores missing de mail de phising de usuarios con numero total de emails < 200 es:  ")
+    num = CorreosMenos200.isna().sum()[0]
+    print(num)
+    print("\n")
+
+    #Mediana
+
+    print("El valor de la mediana de los valores de mail de phising de usuarios con permisos de usuario (permiso 0): ")
+    num = permisosUsuario.median()[0]
+    print(num)
+    print("\n")
+
+    print("El valor de la mediana de los valores de mail de phising de usuarios con permisos de administrador (permiso 1): ")
+    num = permisosAdmin.median()[0]
+    print(num)
+    print("\n")
+
+    print("El valor de la mediana de los valores de mail de phising de usuarios con numero de emails totales >= 200 : ")
+    num = CorreosMas200.median()[0]
+    print(num)
+    print("\n")
+
+    print("El valor de la mediana de los valores de mail de phising de usuarios con numero de emails totales < 200 : ")
+    num = CorreosMenos200.median()[0]
+    print(num)
+    print("\n")
+
+    #Media
+    print("El valor de la media de los valores de mail de phising de usuarios con permisos de usuario (permiso 0): ")
+    num = permisosUsuario.mean()[0]
+    print("%.4f\n" %num)
+
+    print("El valor de la media de los valores de mail de phising de usuarios con permisos de administrador (permiso 1): ")
+    num = permisosAdmin.mean()[0]
+    print("%.4f\n" %num)
+
+    print("El valor de la media de los valores de mail de phising de usuarios con numero de emails totales >= 200 : ")
+    num = CorreosMas200.mean()[0]
+    print("%.4f\n" %num)
+
+    print("El valor de la media de los valores de mail de phising de usuarios con numero de emails totales < 200 : ")
+    num = CorreosMenos200.mean()[0]
+    print("%.4f\n" %num)
+
+    #Varianza
+
+    print("El valor de la varianza de los valores de mail de phising de usuarios con permisos de usuario (permiso 0): ")
+    num = permisosUsuario.var()[0]
+    print("%.4f\n" % num)
+
+    print(
+        "El valor de la varianza de los valores de mail de phising de usuarios con permisos de administrador (permiso 1): ")
+    num = permisosAdmin.var()[0]
+    print("%.4f\n" % num)
+
+    print("El valor de la varianza de los valores de mail de phising de usuarios con numero de emails totales >= 200 : ")
+    num = CorreosMas200.var()[0]
+    print("%.4f\n" % num)
+
+    print("El valor de la varianza de los valores de mail de phising de usuarios con numero de emails totales < 200 : ")
+    num = CorreosMenos200.var()[0]
+    print("%.4f\n" % num)
+
+
+    #Valores máximos
+    print("El valor máximo de los valores de mail de phising de usuarios con permisos de usuario (permiso 0): ")
+    num = permisosUsuario.max().sum()
+    print(num)
+    print("\n")
+
+    print("El valor máximo de los valores de mail de phising de usuarios con permisos de administrador (permiso 1): ")
+    num = permisosAdmin.max().sum()
+    print(num)
+    print("\n")
+
+    print("El valor máximo de los valores de mail de phising de usuarios con numero de emails totales >= 200 : ")
+    num = CorreosMas200.max().sum()
+    print(num)
+    print("\n")
+
+    print("El valor máximo de los valores de mail de phising de usuarios con numero de emails totales < 200 : ")
+    num = CorreosMenos200.max().sum()
+    print(num)
+    print("\n")
+
+    #Valores mínimos
+    print("El valor mínimo de los valores de mail de phising de usuarios con permisos de usuario (permiso 0): ")
+    num = permisosUsuario.min().sum()
+    print(num)
+    print("\n")
+
+    print("El valor mínimo de los valores de mail de phising de usuarios con permisos de administrador (permiso 1): ")
+    num = permisosAdmin.min().sum()
+    print(num)
+    print("\n")
+
+    print("El valor mínimo de los valores de mail de phising de usuarios con numero de emails totales >= 200 : ")
+    num = CorreosMas200.min().sum()
+    print(num)
+    print("\n")
+
+    print("El valor mínimo de los valores de mail de phising de usuarios con numero de emails totales < 200 : ")
+    num = CorreosMenos200.min().sum()
+    print(num)
+    print("\n")
+
+
+
 
 
 con = sqlite3.connect('database.db')
@@ -175,10 +322,5 @@ sql_create_tables(con)
 #rellenarTablas(con)
 #ejer2(con)
 ejer3(con)
-#sql_fetch(con)
-#sql_update(con)
-#sql_fetch(con)
-#sql_delete(con)
-#sql_fetch(con)
 #sql_delete_table(con)
 con.close()
