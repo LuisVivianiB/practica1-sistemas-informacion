@@ -66,9 +66,11 @@ def sql_create_tables(con):
     con.commit()
 
 def ejer2(con):
+    print("-----------------EJERCICIO 2------------------------")
     #contar numero de muestras de usuarios
     print("El numero de muestras de usuarios es: ")
     muestrasUsuarios = pd.DataFrame(pd.read_sql("SELECT nombre FROM usuarios", con))
+    muestrasUsuarios.replace(to_replace=["None"], value=nan, inplace=True)
     num=muestrasUsuarios.count().sum()
     print(num)
 
@@ -76,6 +78,7 @@ def ejer2(con):
     print("\n")
     print("El numero de muestras de urls es: ")
     muestrasUrls = pd.DataFrame(pd.read_sql("SELECT url FROM legal", con))
+    muestrasUrls.replace(to_replace=["None"], value=nan, inplace=True)
     num = muestrasUrls.count().sum()
     print(num)
     print("\n")
@@ -145,6 +148,7 @@ def ejer2(con):
     print("\n")
 
 def ejer3(con):
+    print("-----------------EJERCICIO 3------------------------")
 
     permisosUsuario = pd.DataFrame(pd.read_sql("SELECT e.phishing FROM usuarios u join emails e on u.nombre=e.usuario where u.permisos=0", con))
     #print(permisosUsuario)
@@ -320,7 +324,7 @@ def ejer3(con):
 con = sqlite3.connect('database.db')
 sql_create_tables(con)
 #rellenarTablas(con)
-#ejer2(con)
+ejer2(con)
 ejer3(con)
 #sql_delete_table(con)
 con.close()
