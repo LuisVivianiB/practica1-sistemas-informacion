@@ -323,7 +323,7 @@ def ejer3(con):
 
 con = sqlite3.connect('database.db')
 sql_create_tables(con)
-#rellenarTablas(con)
+rellenarTablas(con)
 ejer2(con)
 ejer3(con)
 #sql_delete_table(con)
