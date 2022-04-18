@@ -4,6 +4,7 @@ import json
 import numpy as np
 from numpy import nan
 
+
 def rellenarTablas(con):
     #abrir json
     with open("users.json", "r") as f:
@@ -319,12 +320,23 @@ def ejer3(con):
 
 
 
+def ejer1P2(con):
+    TopWebVulnerable= pd.DataFrame(pd.read_sql("SELECT * FROM legal",con),columns=["url","cookies","aviso","proteccion_de_datos"])
+    TopWebVulnerable["nivelDeDesactualiza"] = TopWebVulnerable["cookies"] + TopWebVulnerable["aviso"] + TopWebVulnerable["proteccion_de_datos"]
+
+
+    TopWebVulnerable = TopWebVulnerable.dropna(axis=1)
+    TopWebVulnerable.sort_values(by=["nivelDeDesactualiza"], ascending=True, inplace=True)
+    Top5Vulnerable = TopWebVulnerable.head(5)
+    print(Top5Vulnerable)
+    print(Top5Vulnerable)
 
 
 con = sqlite3.connect('database.db')
 sql_create_tables(con)
-rellenarTablas(con)
-ejer2(con)
-ejer3(con)
+#rellenarTablas(con)
+#ejer2(con)
+#ejer3(con)
+ejer1P2(con)
 #sql_delete_table(con)
 con.close()
