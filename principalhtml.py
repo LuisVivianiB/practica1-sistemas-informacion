@@ -1,35 +1,38 @@
 import sqlite3
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 import pandas as pd
 import json
 import plotly
 import plotly.express as px
 
-#from SQLite import con
+# from SQLite import con
 
 app = Flask(__name__)
-con = sqlite3.connect('database.db')
+
+
+# con = sqlite3.connect('templates/database.db')
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/WebVulnerable')
-def WebVulnerable():
 
-    TopWebVulnerable = pd.DataFrame(pd.read_sql("SELECT * FROM legal", con),
-                                    columns=["url", "cookies", "aviso", "proteccion_de_datos"])
-    TopWebVulnerable["nivelDeDesactualiza"] = TopWebVulnerable["cookies"] + TopWebVulnerable["aviso"] + \
-                                              TopWebVulnerable["proteccion_de_datos"]
+@app.route('/WebVulnerable', methods=['POST', 'GET'])
+def WebVulnerable():
+    con = sqlite3.connect('database.db')
+    TopWebVulnerable = pd.DataFrame(pd.read_sql("SELECT * FROM legal", con),columns=["url", "cookies", "aviso", "proteccion_de_datos"])
+    TopWebVulnerable["nivelDeDesactualizacion"] = TopWebVulnerable["cookies"] + TopWebVulnerable["aviso"] + TopWebVulnerable["proteccion_de_datos"]
 
     TopWebVulnerable = TopWebVulnerable.dropna(axis=1)
-    TopWebVulnerable.sort_values(by=["nivelDeDesactualiza"], ascending=True, inplace=True)
+    TopWebVulnerable.sort_values(by=["nivelDeDesactualizacion"], ascending=False, inplace=True)
 
-    fig = px.bar(TopWebVulnerable, x="url", y="cookies")
+     #text = request.form['text']
+
+    fig = px.bar(TopWebVulnerable, x="url", y="nivelDeDesactualizacion")
 
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    header="Top Webs Vulnerables"
+    header = "Top Webs Vulnerables"
 
     return render_template('WebVulnerable.html', graphJSON=graphJSON, header=header)
 
@@ -53,7 +56,4 @@ def chart2():
     return render_template('chart2.html', graphJSON=graphJSON, header=header, description=description)
 
 
-
-
-
-
+app.run()

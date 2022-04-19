@@ -329,7 +329,6 @@ def ejer1P2(con):
     TopWebVulnerable.sort_values(by=["nivelDeDesactualiza"], ascending=True, inplace=True)
     Top5Vulnerable = TopWebVulnerable.head(5)
     print(Top5Vulnerable)
-    print(Top5Vulnerable)
 
 
 con = sqlite3.connect('database.db')
