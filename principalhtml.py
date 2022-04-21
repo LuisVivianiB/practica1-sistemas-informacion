@@ -26,8 +26,12 @@ def WebVulnerable():
 
     TopWebVulnerable = TopWebVulnerable.dropna(axis=1)
     TopWebVulnerable.sort_values(by=["nivelDeDesactualizacion"], ascending=False, inplace=True)
+    if request.method == 'POST':
 
-     #text = request.form['text']
+        submit = (request.form["text"])
+        if(submit.isdigit()):
+            TopWebVulnerable = TopWebVulnerable.head(int(submit))
+
 
     fig = px.bar(TopWebVulnerable, x="url", y="nivelDeDesactualizacion")
 
@@ -37,7 +41,7 @@ def WebVulnerable():
     return render_template('WebVulnerable.html', graphJSON=graphJSON, header=header)
 
 
-@app.route('/chart2')
+@app.route('/TopUsuariosCriticos')
 def chart2():
     df = pd.DataFrame({
         "Vegetables": ["Lettuce", "Cauliflower", "Carrots", "Lettuce", "Cauliflower", "Carrots"],
