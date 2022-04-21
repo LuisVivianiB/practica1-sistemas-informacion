@@ -1,3 +1,4 @@
+import hashlib
 import sqlite3
 import pandas as pd
 import json
@@ -329,6 +330,28 @@ def ejer1P2(con):
     TopWebVulnerable.sort_values(by=["nivelDeDesactualiza"], ascending=True, inplace=True)
     Top5Vulnerable = TopWebVulnerable.head(5)
     print(Top5Vulnerable)
+
+    TopUsuariosCriticos = pd.DataFrame(pd.read_sql(
+        "SELECT u.nombre, u.contrasena, e.phishing, e.cliclados FROM usuarios u join emails e on u.nombre=e.usuario", con),
+                                       columns=["nombre", "contrasena", "phishing", "cliclados"])
+    #TopUsuariosCriticosContrasenaVulnerada = pd.DataFrame(columns=["nombre","contrasena","phishing", "cliclados"])
+    diccionario = open("commonPass.txt", "r")
+    dicsplit = diccionario.read().split("\n")
+    cont = 0
+    for i in TopUsuariosCriticos["contrasena"]:
+        for passw in dicsplit:
+            contrasenasegura=1
+            hash = hashlib.md5(passw.encode('utf-8')).hexdigest()
+            if (i == str(hash)):
+                contrasenasegura = 0
+
+        if(contrasenasegura):
+            TopUsuariosCriticos.drop(cont)
+        cont = cont+1
+
+
+    print(TopUsuariosCriticos.head(5))
+
 
 
 con = sqlite3.connect('database.db')

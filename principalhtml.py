@@ -1,3 +1,4 @@
+import hashlib
 import sqlite3
 
 from flask import Flask, render_template, request
@@ -41,23 +42,34 @@ def WebVulnerable():
     return render_template('WebVulnerable.html', graphJSON=graphJSON, header=header)
 
 
-@app.route('/TopUsuariosCriticos')
-def chart2():
-    df = pd.DataFrame({
-        "Vegetables": ["Lettuce", "Cauliflower", "Carrots", "Lettuce", "Cauliflower", "Carrots"],
-        "Amount": [10, 15, 8, 5, 14, 25],
-        "City": ["London", "London", "London", "Madrid", "Madrid", "Madrid"]
-    })
+@app.route('/TopUsuariosCriticos',methods=['POST', 'GET'])
+def TopUsuariosCriticos():
+    con = sqlite3.connect('database.db')
+    TopUsuariosCriticos =pd.DataFrame(pd.read_sql("SELECT u.nombre u.contrasena e.phishing e.cliclados FROM usuarios u join emails e on u.nombre=e.usuario",con),columns=["nombre", "contrasena", "phishing", "cliclados"])
+    TopUsuariosCriticosContrasenaVulnerada =pd.DataFrame(columns=["nombre", "phishing", "cliclados"])
+    diccionario = open("commonPasswords.txt", "r")
+    dicsplit = diccionario.read().split("\n")
+    for i in TopUsuariosCriticos["contrasena"]:
+        for passw in dicsplit:
+            hash = hashlib.md5(passw)
+            if (passw == str(hash)):
+                TopUsuariosCriticosContrasenaVulnerada.loc[len(TopUsuariosCriticos.index)] = TopUsuariosCriticos.loc [i, ['nombre', 'phishing', 'cliclados']]
 
-    fig = px.bar(df, x="Vegetables", y="Amount", color="City", barmode="stack")
+
+
+
+    TopUsuariosCriticosContrasenaVulnerada = TopUsuariosCriticosContrasenaVulnerada.dropna(axis=1)
+    #if request.method == 'POST':
+
+        #submit = (request.form["text"])
+        #if (submit.isdigit()):
+            #TopUsuariosCriticosContrasenaVulnerada = TopUsuariosCriticosContrasenaVulnerada.head(int(submit))
+
+    fig = px.bar(TopUsuariosCriticosContrasenaVulnerada, x="nombre", y="phishing")
 
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    header = "Vegetables in Europe"
-    description = """
-    The rumor that vegetarians are having a hard time in London and Madrid can probably not be
-    explained by this chart.
-    """
-    return render_template('chart2.html', graphJSON=graphJSON, header=header, description=description)
+    header = "Top Usuarios Criticos"
+    return render_template('TopUsuariosCriticos.html', graphJSON=graphJSON, header=header)
 
 
 app.run()

@@ -3,8 +3,13 @@
 <body style="font-family:arial, sans-serif">
     <h1>{{header}}</h1>
     <h6><a href="/">Return to index page</a></h6>
+    <form action="TopUsuariosCriticos" id="textform" method="post">
+    <textarea name="text"></textarea>
+    <input type="submit" value="Submit">
+</form>
+
     <div id="chart" class="chart"></div>
-    <div>{{description}}</div>
+
 </body>
 
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
