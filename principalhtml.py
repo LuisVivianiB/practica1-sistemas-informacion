@@ -63,13 +63,22 @@ def TopUsuariosCriticos():
 
 
     Top = Top.dropna(axis=1)
+    filtrado = Top
     if request.method == 'POST':
-
         submit = (request.form["text"])
+        Cincuentapor = (request.form["porcentaje"])
+        Top.loc[filtrado.probCritico >= 0.5, 'cincuenta'] = 0
+        Top.loc[filtrado.probCritico < 0.5, 'cincuenta'] = 1
         if (submit.isdigit()):
-            Top = Top.head(int(submit))
+            if(int(Cincuentapor)==0):
+                filtrado = Top[Top["cincuenta"]==0]
+            elif(int(Cincuentapor)==1):
+                filtrado = Top[Top["cincuenta"] == 1]
 
-    fig = px.bar(Top, x="nombre", y="probCritico")
+            filtrado = filtrado.head(int(submit))
+
+
+    fig = px.bar(filtrado, x="nombre", y="probCritico")
 
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     header = "Top Usuarios Criticos"
