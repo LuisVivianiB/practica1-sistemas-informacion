@@ -3,6 +3,7 @@ import sqlite3
 import pandas as pd
 import json
 import numpy as np
+import requests
 from numpy import nan
 
 
@@ -349,12 +350,21 @@ def ejer1P2(con):
     Top = Top[Top['insegura'] == 1]
     print(Top)
 
+def TenVulTiempoReal():
+    url = "https://cve.circl.lu/api/last"
+    response = requests.get(url).text
+
+    data = pd.DataFrame(pd.read_json(response), columns=['id', 'cvss'])
+
+    print(data.head(10))
+
 
 con = sqlite3.connect('database.db')
 sql_create_tables(con)
 #rellenarTablas(con)
 #ejer2(con)
 #ejer3(con)
-ejer1P2(con)
+#ejer1P2(con)
+TenVulTiempoReal()
 #sql_delete_table(con)
 con.close()

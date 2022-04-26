@@ -6,6 +6,7 @@ import pandas as pd
 import json
 import plotly
 import plotly.express as px
+import requests
 
 # from SQLite import con
 
@@ -83,6 +84,20 @@ def TopUsuariosCriticos():
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     header = "Top Usuarios Criticos"
     return render_template('TopUsuariosCriticos.html', graphJSON=graphJSON, header=header)
+
+@app.route('/TenVulTiempoReal',methods=['GET'])
+def TenVulTiempoReal():
+    url = "https://cve.circl.lu/api/last"
+    response = requests.get(url).text
+    data = pd.DataFrame(pd.read_json(response), columns=['id', 'cvss'])
+    data = data.head(10)
+    fig = px.bar(data, x="id", y="cvss")
+    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    return render_template('TenVulTiempoReal.html', graphJSON=graphJSON, header="Top 10 Vulnerabilidades Tiempo Real")
+
+
+
+
 
 
 app.run()
