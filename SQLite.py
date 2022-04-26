@@ -334,24 +334,20 @@ def ejer1P2(con):
     TopUsuariosCriticos = pd.DataFrame(pd.read_sql(
         "SELECT u.nombre, u.contrasena, e.phishing, e.cliclados FROM usuarios u join emails e on u.nombre=e.usuario", con),
                                        columns=["nombre", "contrasena", "phishing", "cliclados"])
-    #TopUsuariosCriticosContrasenaVulnerada = pd.DataFrame(columns=["nombre","contrasena","phishing", "cliclados"])
+
     diccionario = open("commonPass.txt", "r")
     dicsplit = diccionario.read().split("\n")
-    cont = 0
-    for i in TopUsuariosCriticos["contrasena"]:
-        for passw in dicsplit:
-            contrasenasegura=1
-            hash = hashlib.md5(passw.encode('utf-8')).hexdigest()
-            if (i == str(hash)):
-                contrasenasegura = 0
+    TopUsuariosCriticos['insegura'] = 0
+    for passw in dicsplit:
+        hash = hashlib.md5(passw.encode('utf-8')).hexdigest()
+        TopUsuariosCriticos.loc[TopUsuariosCriticos.contrasena == str(hash), 'insegura'] = 1
 
-        if(contrasenasegura):
-            TopUsuariosCriticos.drop(cont)
-        cont = cont+1
+    print(TopUsuariosCriticos.head(30))
 
-
-    print(TopUsuariosCriticos.head(5))
-
+    TopUsuariosCriticos.loc[TopUsuariosCriticos.insegura == 1, 'probCritico'] = TopUsuariosCriticos["cliclados"] / TopUsuariosCriticos["phishing"]
+    Top = TopUsuariosCriticos.sort_values(by=['probCritico'], ascending=False)
+    Top = Top[Top['insegura'] == 1]
+    print(Top)
 
 
 con = sqlite3.connect('database.db')

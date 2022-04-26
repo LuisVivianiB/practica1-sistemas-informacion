@@ -45,27 +45,31 @@ def WebVulnerable():
 @app.route('/TopUsuariosCriticos',methods=['POST', 'GET'])
 def TopUsuariosCriticos():
     con = sqlite3.connect('database.db')
-    TopUsuariosCriticos =pd.DataFrame(pd.read_sql("SELECT u.nombre u.contrasena e.phishing e.cliclados FROM usuarios u join emails e on u.nombre=e.usuario",con),columns=["nombre", "contrasena", "phishing", "cliclados"])
-    TopUsuariosCriticosContrasenaVulnerada =pd.DataFrame(columns=["nombre", "phishing", "cliclados"])
-    diccionario = open("commonPasswords.txt", "r")
+    TopUsuariosCriticos = pd.DataFrame(pd.read_sql(
+        "SELECT u.nombre, u.contrasena, e.phishing, e.cliclados FROM usuarios u join emails e on u.nombre=e.usuario",con), columns=["nombre", "contrasena", "phishing", "cliclados"])
+
+    diccionario = open("commonPass.txt", "r")
     dicsplit = diccionario.read().split("\n")
-    for i in TopUsuariosCriticos["contrasena"]:
-        for passw in dicsplit:
-            hash = hashlib.md5(passw)
-            if (passw == str(hash)):
-                TopUsuariosCriticosContrasenaVulnerada.loc[len(TopUsuariosCriticos.index)] = TopUsuariosCriticos.loc [i, ['nombre', 'phishing', 'cliclados']]
+    TopUsuariosCriticos['insegura'] = 0
+    for passw in dicsplit:
+        hash = hashlib.md5(passw.encode('utf-8')).hexdigest()
+        TopUsuariosCriticos.loc[TopUsuariosCriticos.contrasena == str(hash), 'insegura'] = 1
 
 
+    TopUsuariosCriticos.loc[TopUsuariosCriticos.insegura == 1, 'probCritico'] = TopUsuariosCriticos["cliclados"] / \
+                                                                                TopUsuariosCriticos["phishing"]
+    Top = TopUsuariosCriticos.sort_values(by=['probCritico'], ascending=False)
+    Top = Top[Top['insegura'] == 1]
 
 
-    TopUsuariosCriticosContrasenaVulnerada = TopUsuariosCriticosContrasenaVulnerada.dropna(axis=1)
-    #if request.method == 'POST':
+    Top = Top.dropna(axis=1)
+    if request.method == 'POST':
 
-        #submit = (request.form["text"])
-        #if (submit.isdigit()):
-            #TopUsuariosCriticosContrasenaVulnerada = TopUsuariosCriticosContrasenaVulnerada.head(int(submit))
+        submit = (request.form["text"])
+        if (submit.isdigit()):
+            Top = Top.head(int(submit))
 
-    fig = px.bar(TopUsuariosCriticosContrasenaVulnerada, x="nombre", y="phishing")
+    fig = px.bar(Top, x="nombre", y="probCritico")
 
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     header = "Top Usuarios Criticos"
