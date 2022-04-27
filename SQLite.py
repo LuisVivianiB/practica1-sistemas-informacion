@@ -359,6 +359,8 @@ def TenVulTiempoReal():
     print(data.head(10))
 
 
+
+
 con = sqlite3.connect('database.db')
 sql_create_tables(con)
 #rellenarTablas(con)

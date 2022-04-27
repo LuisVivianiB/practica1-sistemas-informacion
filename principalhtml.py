@@ -1,5 +1,6 @@
 import hashlib
 import sqlite3
+import usersClass
 
 from flask import Flask, render_template, request
 import pandas as pd
@@ -7,11 +8,12 @@ import json
 import plotly
 import plotly.express as px
 import requests
-
+from flask_login import LoginManager
 # from SQLite import con
 
 app = Flask(__name__)
 
+login_manager = LoginManager(app)
 
 # con = sqlite3.connect('templates/database.db')
 
@@ -95,9 +97,25 @@ def TenVulTiempoReal():
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     return render_template('TenVulTiempoReal.html', graphJSON=graphJSON, header="Top 10 Vulnerabilidades Tiempo Real")
 
+@app.route('/index',methods=['GET','POST'])
+@login_manager.user_loader
+def login():
+    con = sqlite3.connect('database.db')
+    username = (request.form["username"])
+    password = (request.accept_encodings["password"])
+    UserParaLogin = pd.DataFrame(pd.read_sql("SELECT * FROM usuarios", con), columns=["nombre", "contrasena"])
+    for user in UserParaLogin:
+        if (user.nombre == username) and (usersClass.user.check_password(user,password)):
+            return loginRet(1)
+        else:
+            return loginRet(0)
 
-
-
+@app.route('/login',methods=['GET','POST'])
+def loginRet(bool):
+    if (bool):
+        render_template('login.html', header="Has iniciado sesión")
+    else:
+        render_template('login.html', header="Error al iniciar sesión")
 
 
 app.run()
