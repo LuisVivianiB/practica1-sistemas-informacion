@@ -1,5 +1,7 @@
 import hashlib
 import sqlite3
+
+import graphviz
 import pandas as pd
 import json
 import numpy as np
@@ -10,6 +12,7 @@ from numpy import nan
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 from sklearn import tree
+from sklearn import datasets, linear_model
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import export_graphviz
 from subprocess import call
@@ -366,27 +369,32 @@ def TenVulTiempoReal():
     print(data.head(10))
 
 def linearRegression():
-    usuariosApredecir = open("users_IA_clases.json", "r")
-    usuarios = json.load(usuariosApredecir)
-    phishing = pd.DataFrame(usuarios['usuarios'], columns=['emails_phishing_recibidos','emails_phishing_clicados', 'vulnerable'])
-    phishing['emailsDivison']= phishing['emails_phishing_clicados'] / phishing['emails_phishing_recibidos']
-    phishing = phishing.dropna()
-    userEmails_train = phishing['emailsDivison'][:-20].values.reshape(-1,1)
-    userEmails_test = phishing['emailsDivison'][-20:].values.reshape(-1,1)
+    datos = crearData()
+    userEmails_train = datos[0]
+    userVulnerable_train = datos[1]
+    userEmails_test= datos[2]
+    userVulnerable_test= datos[3]
 
-    userVulnerable_train = phishing['vulnerable'][:-20].values.reshape(-1,1)
-    userVulnerable_test = phishing['vulnerable'][-20:].values.reshape(-1,1)
+    regr = LinearRegression()
 
-    reg = LinearRegression()
-    reg.fit(userEmails_train, userVulnerable_train)
-    print(reg.coef_)
-    userVulnerable_predict = reg.predict(userEmails_test)
-    print("Mean squared error: %.2f" % mean_squared_error(userVulnerable_test, userVulnerable_predict))
+    regr.fit(userEmails_train, userVulnerable_train)
+
+    prediccion = regr.predict(userVulnerable_test)
+
+    for i in prediccion:
+        if (i < 0.5):
+            i = 0
+        else:
+            i = 1
+
+    print("Mean squared error: %.2f" % mean_squared_error(userEmails_test,
+                                                          prediccion))
 
     # Plot outputs
-    print("pred:",userEmails_test)
+    ##### NO SABEMOS SI ESTA BIEN COLOCADO EL PLOT#####
+    print("pred:",userVulnerable_test)
     plt.scatter(userEmails_test.ravel(), userVulnerable_test, color="black")
-    plt.plot(userEmails_test.ravel(), userVulnerable_predict, color="blue", linewidth=3)
+    plt.plot(userVulnerable_test.ravel(), prediccion, color="blue", linewidth=3)
     plt.xticks(())
     plt.yticks(())
     plt.show()
@@ -395,23 +403,25 @@ def crearData():
     usuariosTrain = open("users_IA_clases.json", "r")
     usuarios = json.load(usuariosTrain)
 
-    usuariosApredecir = open("users_IA_predecir.json", "r")
-    nuevosUsuarios = json.load(usuariosApredecir)
 
     phishing = pd.DataFrame(usuarios['usuarios'], columns=['emails_phishing_recibidos','emails_phishing_clicados', 'vulnerable'])
     phishing['emailsDivison']= phishing['emails_phishing_clicados'] / phishing['emails_phishing_recibidos']
     phishing = phishing.dropna()
 
-    phishingNuevos = pd.DataFrame(nuevosUsuarios['usuarios'],columns=['emails_phishing_recibidos', 'emails_phishing_clicados'])
-    phishingNuevos['emailsDivison'] = phishingNuevos['emails_phishing_clicados'] / phishingNuevos['emails_phishing_recibidos']
-    phishingNuevos = phishingNuevos.dropna()
-    userEmails_train = phishing['emailsDivison'][:-20].values.reshape(-1, 1)
-    userEmails_test = phishingNuevos['emailsDivison'][-20:].values.reshape(-1, 1)
+    userEmails_train = phishing['emailsDivison'][:-6].values.reshape(-1, 1)
 
-    userVulnerable_train = phishing['vulnerable'][:-20].values.reshape(-1, 1)
-    userVulnerable_test = phishingNuevos['vulnerable'][-20:].values.reshape(-1, 1)
+    userVulnerable_train = phishing['vulnerable'][:-6].values.reshape(-1, 1)
 
-    return userEmails_train, userEmails_test, userVulnerable_train, userVulnerable_test
+
+    userEmails_test = phishing['emailsDivison'][-24:].values.reshape(-1, 1)
+
+    userVulnerable_test = phishing['vulnerable'][-24:].values.reshape(-1, 1)
+
+
+
+    return userEmails_train, userVulnerable_train, userEmails_test, userVulnerable_test
+
+
 
 def DecisionTree():
     array = crearData()
@@ -420,12 +430,12 @@ def DecisionTree():
     userVulnerable_train = array[2]
     userVulnerable_test = array[3]
 
-    X, y = userEmails_train, userVulnerable_train
-    # Predict
-    clf_model = tree.DecisionTreeClassifier()
-    clf_model.fit(X, y)
 
-
+    decis = tree.DecisionTreeClassifier()
+    decis = decis.fit(userEmails_train, userVulnerable_train)
+    datosExport = tree.export_graphviz(decis)
+    graph = graphviz.Source(datosExport)
+    graph.render("machine_learning/tree_graph_render")
 
 
 con = sqlite3.connect('database.db')
@@ -434,7 +444,7 @@ sql_create_tables(con)
 #ejer2(con)
 #ejer3(con)
 #ejer1P2(con)
-#linearRegression()
-DecisionTree()
+linearRegression()
+#DecisionTree()
 #sql_delete_table(con)
 con.close()
