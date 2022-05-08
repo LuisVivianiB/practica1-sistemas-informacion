@@ -150,30 +150,7 @@ def crearData():
 
     return userEmails_train, userEmails_test, userVulnerable_train, userVulnerable_test
 
-@app.route('/RegresionLineal', methods=['GET'])
-def linearRegression():
 
-    array=crearData()
-    userEmails_train = array[0]
-    userEmails_test = array[1]
-    userVulnerable_train = array[2]
-    userVulnerable_test = array[3]
-
-    reg = LinearRegression()
-    reg.fit(userEmails_train, userVulnerable_train)
-    print(reg.coef_)
-    userVulnerable_predict = reg.predict(userVulnerable_test)
-    print("Mean squared error: %.2f" % mean_squared_error(userVulnerable_test, userVulnerable_predict))
-
-    # Plot outputs
-    print("pred:",userEmails_test)
-    plt.scatter(userEmails_test.ravel(), userVulnerable_test, color="black")
-    plt.plot(userEmails_test.ravel(), userVulnerable_predict, color="blue", linewidth=3)
-    plt.xticks(())
-    plt.yticks(())
-    plt.show()
-
-    return render_template('index.html')
 
 @app.route('/DecisionTree',methods=['GET','POST'])
 def DecisionTree():
