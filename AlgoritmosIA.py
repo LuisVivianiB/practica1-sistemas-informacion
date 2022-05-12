@@ -3,14 +3,10 @@ import sqlite3
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import json
-from sklearn.datasets import load_iris
 from matplotlib import pyplot as plt
 from sklearn import tree
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
-from sklearn.tree import export_graphviz
-from subprocess import call
-
+from sklearn.metrics import mean_squared_error, accuracy_score
 
 
 def crearData():
@@ -41,22 +37,16 @@ def linearRegression():
     userVulnerable_test = datos[3]
 
     regr = LinearRegression()
-
     regr.fit(userEmails_train, userVulnerable_train)
-
     prediccion = regr.predict(userVulnerable_test)
 
-    for i in prediccion:
-        if (i < 0.5):
-            i = 0
+    for i in range(len(prediccion)):
+        if (prediccion[i] < 0.5):
+            prediccion[i] = 0
         else:
-            i = 1
+            prediccion[i] = 1
 
-    print("Mean squared error: %.2f" % mean_squared_error(userEmails_test,
-                                                          prediccion))
-
-    # Plot outputs
-    ##### NO SABEMOS SI ESTA BIEN COLOCADO EL PLOT#####
+    print("Mean squared error: %.2f" % mean_squared_error(userEmails_test,prediccion))
     print("pred:", userVulnerable_test)
     plt.scatter(userEmails_test.ravel(), userVulnerable_test, color="black")
     plt.plot(userVulnerable_test.ravel(), prediccion, color="blue", linewidth=3)
@@ -69,12 +59,8 @@ def DecisionTree():
     array = crearData()
     userEmails_train = array[0]
     userVulnerable_train = array[1]
-    # userEmails_test = array[2]
-    # userVulnerable_test = array[3]
 
     regr = tree.DecisionTreeClassifier()
-    #lab_enc = preprocessing.LabelEncoder()
-    ##training_scores_encoded = lab_enc.fit_transform(userVulnerable_train)
     regr.fit(userEmails_train, userVulnerable_train)
 
     tree.plot_tree(regr, filled=True, fontsize=10, rounded=True, precision=2, proportion=False)
@@ -83,10 +69,10 @@ def DecisionTree():
 
 def RandomForest():
 
-    iris = load_iris()
     array = crearData()
     userEmails_train = array[0]
     userVulnerable_train = array[1]
+
     clf = RandomForestClassifier(max_depth=2, random_state=0, n_estimators=10)
     clf.fit(userEmails_train, userVulnerable_train)
     print(str(userEmails_train[0]) + " " + str(userVulnerable_train[0]))
@@ -98,6 +84,6 @@ def RandomForest():
 
 con = sqlite3.connect('database.db')
 
-##linearRegression()
-##DecisionTree()
+#linearRegression()
+#DecisionTree()
 RandomForest()

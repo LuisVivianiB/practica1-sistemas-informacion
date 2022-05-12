@@ -1,6 +1,5 @@
 import hashlib
 import sqlite3
-import usersClass
 
 from flask import Flask, render_template, request
 import pandas as pd
@@ -11,21 +10,10 @@ import requests
 from flask_login import LoginManager
 
 
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn import datasets, linear_model
-from sklearn.metrics import mean_squared_error, r2_score
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
-from sklearn import tree
-from sklearn.datasets import load_iris
-import graphviz
-
 app = Flask(__name__)
 
 login_manager = LoginManager(app)
 
-# con = sqlite3.connect('templates/database.db')
 
 @app.route('/')
 def index():
@@ -59,7 +47,7 @@ def WebVulnerable():
 def TopUsuariosCriticos():
     con = sqlite3.connect('database.db')
     TopUsuariosCriticos = pd.DataFrame(pd.read_sql(
-        "SELECT u.nombre, u.contrasena, e.phishing, e.cliclados FROM usuarios u join emails e on u.nombre=e.usuario",con), columns=["nombre", "contrasena", "phishing", "cliclados"])
+        "SELECT u.nombre, u.contrasena, e.phishing, e.cliclados FROM usuarios u join emails e on u.nombre=e.usuario",con),columns=["nombre", "contrasena", "phishing", "cliclados"])
 
     diccionario = open("commonPass.txt", "r")
     dicsplit = diccionario.read().split("\n")
@@ -74,7 +62,6 @@ def TopUsuariosCriticos():
     Top = TopUsuariosCriticos.sort_values(by=['probCritico'], ascending=False)
     Top = Top[Top['insegura'] == 1]
 
-
     Top = Top.dropna(axis=1)
     filtrado = Top
     if request.method == 'POST':
@@ -87,9 +74,10 @@ def TopUsuariosCriticos():
                 filtrado = Top[Top["cincuenta"]==0]
             elif(int(Cincuentapor)==1):
                 filtrado = Top[Top["cincuenta"] == 1]
+            elif(int(Cincuentapor)==2):
+                filtrado = Top
 
             filtrado = filtrado.head(int(submit))
-
 
     fig = px.bar(filtrado, x="nombre", y="probCritico")
 
@@ -105,68 +93,8 @@ def TenVulTiempoReal():
     data = data.head(10)
     fig = px.bar(data, x="id", y="cvss")
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    return render_template('TenVulTiempoReal.html', graphJSON=graphJSON, header="Top 10 Vulnerabilidades Tiempo Real")
-
-@app.route('/index',methods=['GET','POST'])
-@login_manager.user_loader
-def login():
-    con = sqlite3.connect('database.db')
-    username = (request.form["username"])
-    password = (request.accept_encodings["password"])
-    UserParaLogin = pd.DataFrame(pd.read_sql("SELECT * FROM usuarios", con), columns=["nombre", "contrasena"])
-    for user in UserParaLogin:
-        if (user.nombre == username) and (usersClass.user.check_password(user,password)):
-            return loginRet(1)
-        else:
-            return loginRet(0)
-
-@app.route('/login',methods=['GET','POST'])
-def loginRet(bool):
-    if (bool):
-        render_template('login.html', header="Has iniciado sesión")
-    else:
-        render_template('login.html', header="Error al iniciar sesión")
-
-
-def crearData():
-    usuariosTrain = open("users_IA_clases.json", "r")
-    usuarios = json.load(usuariosTrain)
-
-    usuariosApredecir = open("users_IA_predecir.json", "r")
-    nuevosUsuarios = json.load(usuariosApredecir)
-
-    phishing = pd.DataFrame(usuarios['usuarios'], columns=['emails_phishing_recibidos','emails_phishing_clicados', 'vulnerable'])
-    phishing['emailsDivison']= phishing['emails_phishing_clicados'] / phishing['emails_phishing_recibidos']
-    phishing = phishing.dropna()
-
-    phishingNuevos = pd.DataFrame(nuevosUsuarios['usuarios'],columns=['emails_phishing_recibidos', 'emails_phishing_clicados'])
-    phishingNuevos['emailsDivison'] = phishingNuevos['emails_phishing_clicados'] / phishingNuevos['emails_phishing_recibidos']
-    phishingNuevos = phishingNuevos.dropna()
-    userEmails_train = phishing['emailsDivison'][:-20].values.reshape(-1, 1)
-    userEmails_test = phishingNuevos['emailsDivison'][-20:].values.reshape(-1, 1)
-
-    userVulnerable_train = phishing['vulnerable'][:-20].values.reshape(-1, 1)
-    userVulnerable_test = phishingNuevos['vulnerable'][-20:].values.reshape(-1, 1)
-
-    return userEmails_train, userEmails_test, userVulnerable_train, userVulnerable_test
-
-
-
-@app.route('/DecisionTree',methods=['GET','POST'])
-def DecisionTree():
-    array = crearData()
-    userEmails_train = array[0]
-    userEmails_test = array[1]
-    userVulnerable_train = array[2]
-    userVulnerable_test = array[3]
-
-    X, y = userEmails_train, userVulnerable_train
-    # Predict
-    clf_model = tree.DecisionTreeClassifier()
-    clf_model.fit(X, y)
-
-
-
+    header = "Top 10 Vulnerabilidades Tiempo Real"
+    return render_template('TenVulTiempoReal.html', graphJSON=graphJSON, header=header)
 
 
 
