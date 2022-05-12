@@ -68,15 +68,21 @@ def DecisionTree():
 
 
 def RandomForest():
-
     array = crearData()
     userEmails_train = array[0]
     userVulnerable_train = array[1]
+    userVulnerable_test = array[3]
 
     clf = RandomForestClassifier(max_depth=2, random_state=0, n_estimators=10)
     clf.fit(userEmails_train, userVulnerable_train)
-    print(str(userEmails_train[0]) + " " + str(userVulnerable_train[0]))
-    print(clf.predict([userEmails_train[0]]))
+
+    userVulnerable_predicion = clf.predict(userEmails_train)
+    for i in range(len(userVulnerable_predicion)):
+        if (userVulnerable_predicion[i] < 0.5):
+            userVulnerable_predicion[i] = 0
+        else:
+            userVulnerable_predicion[i] = 1
+
     for i in range(len(clf.estimators_)):
         estimator = clf.estimators_[i]
         tree.plot_tree(estimator, filled=True, fontsize=10, rounded=True, precision=2, proportion=False)
@@ -84,6 +90,6 @@ def RandomForest():
 
 con = sqlite3.connect('database.db')
 
-#linearRegression()
-#DecisionTree()
+linearRegression()
+DecisionTree()
 RandomForest()
